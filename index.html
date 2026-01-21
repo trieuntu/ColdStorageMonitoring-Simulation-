@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Giám sát IoT Thủy Sản-Hải Vương</title>
+    <style>
+        :root {
+            --primary: #2563eb; --success: #22c55e; --warning: #f59e0b; --danger: #ef4444; --bg: #f8fafc;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        .header { text-align: center; margin-bottom: 40px; }
+        
+        /* Grid linh hoạt: Mobile 1 cột, Tablet 2 cột, Desktop 3-4 cột */
+        .container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+            gap: 20px; max-width: 1400px; margin: 0 auto; 
+        }
+
+        .card { 
+            background: white; border-radius: 16px; padding: 24px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            border: 1px solid #e2e8f0; transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        /* Badge Trạng thái */
+        .status-badge {
+            display: inline-flex; align-items: center; padding: 4px 12px;
+            border-radius: 99px; font-size: 12px; font-weight: 600; margin-bottom: 16px;
+        }
+        .bg-Normal { background: #dcfce7; color: #166534; }
+        .bg-Warning { background: #fef3c7; color: #92400e; }
+        .bg-Danger { background: #fee2e2; color: #991b1b; }
+
+        .location { font-size: 20px; font-weight: 700; margin: 0 0 4px 0; }
+        .sensor-id { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+
+        .stats { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-box { 
+            flex: 1; padding: 12px; border-radius: 12px; background: #f1f5f9;
+            text-align: center; border: 2px solid transparent;
+        }
+        .stat-box.alert { border-color: var(--danger); background: #fff1f2; }
+        .stat-label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+        .stat-value { font-size: 24px; font-weight: 800; }
+
+        .status-msg { font-size: 14px; font-weight: 500; padding-top: 15px; border-top: 1px solid #f1f5f9; }
+        .Normal-text { color: var(--success); }
+        .Warning-text, .Danger-text { color: var(--danger); font-weight: 600; }
+
+        .footer-time { font-size: 11px; color: #94a3b8; margin-top: 10px; text-align: right; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 style="color: var(--primary);">IoT Smart Processing Dashboard (Hải Vương)</h1>
+    <p>Hệ thống giám sát điều kiện bảo quản thủy sản thời gian thực</p>
+</div>
+
+<div id="app" class="container">
+    </div>
+
+<script>
+    async function updateData() {
+        try {
+            const response = await fetch('api_sensor.php');
+            const sensors = await response.json();
+            const container = document.getElementById('app');
+            
+            container.innerHTML = sensors.map(s => `
+                <div class="card">
+                    <span class="status-badge bg-${s.status}">${s.status.toUpperCase()}</span>
+                    <h3 class="location">${s.location}</h3>
+                    <div class="sensor-id">Device ID: ${s.id}</div>
+                    
+                    <div class="stats">
+                        <div class="stat-box ${s.temp.warn ? 'alert' : ''}">
+                            <div class="stat-label">Nhiệt độ</div>
+                            <div class="stat-value">${s.temp.val}°C</div>
+                        </div>
+                        <div class="stat-box ${s.humi.warn ? 'alert' : ''}">
+                            <div class="stat-label">Độ ẩm</div>
+                            <div class="stat-value">${s.humi.val}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-msg ${s.status}-text">${s.message}</div>
+                    <div class="footer-time">Đồng bộ lúc: ${s.time}</div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error("Lỗi kết nối API:", err);
+        }
+    }
+
+    setInterval(updateData, 5000);
+    updateData();
+</script>
+
+</body>
+</html>
